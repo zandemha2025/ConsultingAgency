@@ -27,14 +27,19 @@ fi
 # --allow-local-files lets it embed the chart PNGs referenced from the deck.
 COMMON=(--allow-local-files --html)
 
-npx -y @marp-team/marp-cli "${COMMON[@]}" --html-output "$OUT/deck.html" "$SRC" \
+# If bootstrap.sh wrote a marp config (Chrome path + --no-sandbox args), use it.
+CONFIG=()
+[[ -f "$HOME/.marp.config.js" ]] && CONFIG=(--config "$HOME/.marp.config.js")
+
+# Marp's --html-output requires the file to exist for HTML; use --output instead.
+npx -y @marp-team/marp-cli "${CONFIG[@]}" "${COMMON[@]}" --output "$OUT/deck.html" "$SRC" \
   || { echo "[render_deck] HTML render failed"; exit 1; }
 echo "[render_deck] wrote $OUT/deck.html"
 
-npx -y @marp-team/marp-cli "${COMMON[@]}" --pdf  --output "$OUT/deck.pdf"  "$SRC" \
-  || echo "[render_deck] WARN: PDF render failed (Chromium may be missing)."
+npx -y @marp-team/marp-cli "${CONFIG[@]}" "${COMMON[@]}" --pdf  --output "$OUT/deck.pdf"  "$SRC" \
+  || echo "[render_deck] WARN: PDF render failed (no Chrome? run scripts/bootstrap.sh)."
 [[ -f "$OUT/deck.pdf" ]] && echo "[render_deck] wrote $OUT/deck.pdf"
 
-npx -y @marp-team/marp-cli "${COMMON[@]}" --pptx --output "$OUT/deck.pptx" "$SRC" \
+npx -y @marp-team/marp-cli "${CONFIG[@]}" "${COMMON[@]}" --pptx --output "$OUT/deck.pptx" "$SRC" \
   || echo "[render_deck] WARN: PPTX render failed."
 [[ -f "$OUT/deck.pptx" ]] && echo "[render_deck] wrote $OUT/deck.pptx"

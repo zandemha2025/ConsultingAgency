@@ -73,7 +73,32 @@ if (( ${#MISSING_PY[@]} > 0 )); then
   }
 fi
 
-# 4. pandoc --------------------------------------------------------------
+# 4. Chrome for marp-cli (PDF/PPTX rendering needs a real Chrome) -------
+# Ubuntu's chromium-browser is a snap stub; use Puppeteer's bundled Chrome instead.
+# Idempotent: skips if a working Chrome is already on disk.
+if [[ ! -x "$HOME/.cache/puppeteer/chrome/"*"/chrome-linux64/chrome" ]] 2>/dev/null \
+   && ! ls "$HOME/.cache/puppeteer/chrome/"*"/chrome-linux64/chrome" >/dev/null 2>&1; then
+  if command -v npx >/dev/null 2>&1; then
+    log "installing Puppeteer's Chrome (one-time, ~150MB)..."
+    npx -y puppeteer browsers install chrome >/dev/null 2>&1 || \
+      log "WARN: puppeteer chrome install failed; deck PDF/PPTX will fail. Try manually: npx puppeteer browsers install chrome"
+  fi
+fi
+
+# Write a marp config that forces --no-sandbox (required when running as root in containers).
+CHROME_BIN="$(ls "$HOME/.cache/puppeteer/chrome/"*"/chrome-linux64/chrome" 2>/dev/null | head -1 || true)"
+if [[ -n "$CHROME_BIN" ]]; then
+  cat > "$HOME/.marp.config.js" <<EOF
+module.exports = {
+  browser: 'chrome',
+  browserPath: '$CHROME_BIN',
+  browserArgs: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
+};
+EOF
+  log "marp config written: $HOME/.marp.config.js (Chrome: $CHROME_BIN)"
+fi
+
+# 5. pandoc --------------------------------------------------------------
 if ! command -v pandoc >/dev/null 2>&1; then
   log "pandoc not found; attempting install..."
   if command -v apt-get >/dev/null 2>&1; then

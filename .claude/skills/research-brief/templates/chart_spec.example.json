@@ -1,0 +1,58 @@
+[
+  {
+    "id": "ev-tam-by-segment",
+    "type": "bar",
+    "title": "EV TAM by segment, 2025E ($B)",
+    "x": ["Passenger", "LCV", "HCV", "2-wheeler"],
+    "y": [420, 110, 65, 28],
+    "x_label": "Segment",
+    "y_label": "$B",
+    "source": "IEA Global EV Outlook 2025",
+    "footnote": "FX at 2024 spot rates",
+    "backend": "matplotlib"
+  },
+  {
+    "id": "charger-growth-de",
+    "type": "line",
+    "title": "Public charger growth, Germany",
+    "series": [
+      {"name": "AC", "x": [2020, 2021, 2022, 2023, 2024], "y": [33, 45, 62, 84, 108]},
+      {"name": "DC", "x": [2020, 2021, 2022, 2023, 2024], "y": [4, 7, 12, 19, 31]}
+    ],
+    "x_label": "Year",
+    "y_label": "Chargers (k)",
+    "source": "BNetzA charger registry",
+    "backend": "plotly",
+    "interactive_html": true
+  },
+  {
+    "id": "value-pool-shift",
+    "type": "waterfall",
+    "title": "Value pool shift, OEM -> charging+software, 2025-2030",
+    "waterfall": {
+      "labels": ["2025 OEM", "+ Charging", "+ Software", "+ Energy", "- Hardware", "2030 OEM"],
+      "values": [100, 18, 22, 9, -14, 135],
+      "kinds":  ["abs", "rel", "rel", "rel", "rel", "abs"]
+    },
+    "y_label": "Indexed (2025=100)",
+    "source": "Internal analysis; BCG e-mobility 2024",
+    "backend": "matplotlib"
+  },
+  {
+    "id": "vertical-2x2",
+    "type": "matrix2x2",
+    "title": "Where to play - vertical attractiveness vs. right-to-win",
+    "matrix": {
+      "x_axis": "Market attractiveness ->",
+      "y_axis": "Right-to-win ->",
+      "items": [
+        {"label": "Fleet depots",   "x": 0.78, "y": 0.72},
+        {"label": "Highway DC",     "x": 0.62, "y": 0.34},
+        {"label": "Workplace AC",   "x": 0.48, "y": 0.66},
+        {"label": "Residential AC", "x": 0.30, "y": 0.55}
+      ]
+    },
+    "source": "Team analysis",
+    "backend": "matplotlib"
+  }
+]

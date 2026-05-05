@@ -9,28 +9,37 @@ set -euo pipefail
 log() { printf '[bootstrap] %s\n' "$*" >&2; }
 
 # 1. Feynman --------------------------------------------------------------
+# Two install paths; we try them in order. (1) npm registry - works in any env
+# with internet to npmjs.org and Node >= 20. (2) Official feynman.is curl|bash
+# bundled installer - heavier but ships its own Node runtime.
+install_feynman_npm() {
+  command -v npm >/dev/null 2>&1 || return 1
+  log "trying npm: npm install -g @companion-ai/feynman"
+  if npm install -g --silent @companion-ai/feynman 2>&1 | tail -20 >&2; then
+    return 0
+  fi
+  return 1
+}
+
+install_feynman_curl() {
+  command -v curl >/dev/null 2>&1 || return 1
+  log "trying curl: feynman.is/install"
+  curl -fsSL https://feynman.is/install | bash
+}
+
 if ! command -v feynman >/dev/null 2>&1; then
-  log "feynman not found; installing via official installer..."
-  if ! command -v curl >/dev/null 2>&1; then
-    log "ERROR: curl is required to install feynman. Install curl and retry."
-    exit 1
+  log "feynman not found; trying optional install (skill works without it)..."
+  if install_feynman_npm 2>/dev/null || install_feynman_curl 2>/dev/null; then
+    for candidate in "$HOME/.feynman/bin" "$HOME/.local/bin" "/usr/local/bin" \
+                     "$(npm bin -g 2>/dev/null || echo /usr/lib/node_modules/.bin)"; do
+      [[ -x "$candidate/feynman" ]] && { export PATH="$candidate:$PATH"; break; }
+    done
   fi
-  if ! curl -fsSL https://feynman.is/install | bash; then
-    log "ERROR: feynman install failed. See output above."
-    exit 1
+  if command -v feynman >/dev/null 2>&1; then
+    log "feynman installed: $(command -v feynman)"
+  else
+    log "feynman not available; native multi-agent flow will be used (this is fine)."
   fi
-  # The installer typically drops binaries into ~/.feynman/bin or /usr/local/bin.
-  for candidate in "$HOME/.feynman/bin" "$HOME/.local/bin" "/usr/local/bin"; do
-    if [[ -x "$candidate/feynman" ]]; then
-      export PATH="$candidate:$PATH"
-      break
-    fi
-  done
-  if ! command -v feynman >/dev/null 2>&1; then
-    log "ERROR: feynman installed but not on PATH. Add ~/.feynman/bin to PATH and retry."
-    exit 1
-  fi
-  log "feynman installed: $(command -v feynman)"
 else
   log "feynman: $(command -v feynman)"
 fi
